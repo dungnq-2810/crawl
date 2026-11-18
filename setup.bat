@@ -110,8 +110,9 @@ if exist "ngrok.exe" (
   echo            roi giai nen ngrok.exe vao thu muc nay.
 )
 :ngrok_san_sang
-set "NGROK_CMD=ngrok"
-if exist "ngrok.exe" set "NGROK_CMD=ngrok.exe"
+set "NGROK_CMD=%~dp0ngrok.exe"
+if not exist "%NGROK_CMD%" set "NGROK_CMD=ngrok.exe"
+if not exist "%NGROK_CMD%" set "NGROK_CMD=ngrok"
 if not "%VUA_TAI_NGROK%"=="1" echo [4/6] ngrok - OK
 
 REM ---------- [5/6] Cau hinh .env ----------
@@ -186,7 +187,10 @@ if "%VUA_TAI_NGROK%"=="1" if not exist "ngrok.exe" (
   echo.
   goto :khong_co_tunnel
 )
-if "%NGROK_CMD%"=="ngrok" where ngrok >nul 2>&1 || goto :khong_co_tunnel
+if not exist "%NGROK_CMD%" where ngrok >nul 2>&1 || (
+  echo       LOI: Khong tim thay ngrok.exe de mo tunnel.
+  goto :khong_co_tunnel
+)
 
 REM Tunnel dang chay roi thi thoi.
 powershell -NoProfile -Command "try{$t=(Invoke-RestMethod 'http://127.0.0.1:4040/api/tunnels' -TimeoutSec 2).tunnels; if(($t | Where-Object { $_.public_url -like '*%NGROK_DOMAIN%*' }).Count -gt 0){exit 0}else{exit 1}}catch{exit 1}" >nul 2>&1
@@ -197,7 +201,7 @@ if not errorlevel 1 (
 REM Truyen token bang co dong lenh: may tung chay "ngrok config add-authtoken" cua tai khoan khac
 REM thi file config do se lan at, gay loi ERR_NGROK_320 vi domain khong thuoc tai khoan.
 echo       Dang mo tunnel ngrok tai %NGROK_DOMAIN%...
-start "Viral Radar Tunnel" cmd /k "%NGROK_CMD% http %PORT% --url https://%NGROK_DOMAIN% --authtoken %NGROK_AUTHTOKEN%"
+start "Viral Radar Tunnel" cmd /k ""%NGROK_CMD%" http %PORT% --url https://%NGROK_DOMAIN% --authtoken %NGROK_AUTHTOKEN%"
 "%SystemRoot%\System32\timeout.exe" /t 6 /nobreak >nul 2>&1
 powershell -NoProfile -Command "try{$t=(Invoke-RestMethod 'http://127.0.0.1:4040/api/tunnels' -TimeoutSec 5).tunnels; if($t.Count -gt 0){Write-Host ('      Tunnel OK: ' + $t[0].public_url)}else{throw 'x'}}catch{Write-Host '      TUNNEL CHUA LEN - xem cua so Viral Radar Tunnel. Hay gap:'; Write-Host '        ERR_NGROK_108: tai khoan ngrok free chi chay 1 tunnel 1 luc - tat tunnel cua app khac truoc.'; Write-Host '        ERR_NGROK_320: domain khong thuoc tai khoan cua token trong .env.'}"
 goto :da_xong
