@@ -23,33 +23,33 @@ if not defined PY where python >nul 2>&1 && python -c "import sys;sys.exit(0 if 
 if not defined PY if exist "%LocalAppData%\Programs\Python\Python311\python.exe" set PY="%LocalAppData%\Programs\Python\Python311\python.exe"
 if not defined PY if exist "%ProgramFiles%\Python311\python.exe" set PY="%ProgramFiles%\Python311\python.exe"
 if exist "%VPY%" goto :python_ok
+if defined PY goto :python_ok
 
-if not defined PY (
-  echo [1/6] May chua co Python 3.10 tro len. Dang tu dong tai va cai dat Python 3.11...
-  echo       Dang tai bo cai tu python.org (khoang 25 MB)...
-  powershell -NoProfile -ExecutionPolicy Bypass -Command "$ErrorActionPreference='Stop'; [Net.ServicePointManager]::SecurityProtocol=[Net.SecurityProtocolType]::Tls12; (New-Object Net.WebClient).DownloadFile('https://www.python.org/ftp/python/3.11.9/python-3.11.9-amd64.exe', 'python-3.11.exe')" >nul 2>&1
-  if not exist "python-3.11.exe" (
-    where curl >nul 2>&1 && curl.exe -L "https://www.python.org/ftp/python/3.11.9/python-3.11.9-amd64.exe" -o python-3.11.exe >nul 2>&1
-  )
-  if exist "python-3.11.exe" (
-    echo       Dang cai dat Python 3.11 ngam (mat khoang 30-60 giay)...
-    start /wait "" python-3.11.exe /quiet InstallAllUsers=0 PrependPath=1 Include_test=0
-    del /f /q python-3.11.exe >nul 2>&1
-  )
-  if exist "%LocalAppData%\Programs\Python\Python311\python.exe" set PY="%LocalAppData%\Programs\Python\Python311\python.exe"
-  if not defined PY if exist "%ProgramFiles%\Python311\python.exe" set PY="%ProgramFiles%\Python311\python.exe"
-  if not defined PY where py >nul 2>&1 && py -3 -c "import sys;sys.exit(0 if sys.version_info>=(3,10) else 1)" >nul 2>&1 && set "PY=py -3"
-  if not defined PY where python >nul 2>&1 && python -c "import sys;sys.exit(0 if sys.version_info>=(3,10) else 1)" >nul 2>&1 && set "PY=python"
-)
+echo [1/6] May chua co Python 3.10 tro len. Dang tu dong tai va cai dat Python 3.11...
+echo       Dang tai bo cai tu python.org, khoang 25 MB...
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$ErrorActionPreference='Stop'; [Net.ServicePointManager]::SecurityProtocol=[Net.SecurityProtocolType]::Tls12; (New-Object Net.WebClient).DownloadFile('https://www.python.org/ftp/python/3.11.9/python-3.11.9-amd64.exe', 'python-3.11.exe')" >nul 2>&1
+if not exist "python-3.11.exe" where curl >nul 2>&1 && curl.exe -L "https://www.python.org/ftp/python/3.11.9/python-3.11.9-amd64.exe" -o python-3.11.exe >nul 2>&1
+if not exist "python-3.11.exe" goto :cai_python_loi
 
-if not defined PY (
-  echo LOI: Khong the tu dong cai dat Python.
-  echo      Vui long tai bo cai thu cong tai: https://www.python.org/downloads/windows/
-  echo      Khi cai NHO TICH o "Add python.exe to PATH", roi chay lai file nay.
-  echo.
-  if not defined NO_PAUSE pause
-  exit /b 1
-)
+echo       Dang cai dat Python 3.11 ngam, vui long doi giay lat...
+start /wait "" python-3.11.exe /quiet InstallAllUsers=0 PrependPath=1 Include_test=0
+del /f /q python-3.11.exe >nul 2>&1
+
+if exist "%LocalAppData%\Programs\Python\Python311\python.exe" set PY="%LocalAppData%\Programs\Python\Python311\python.exe"
+if not defined PY if exist "%ProgramFiles%\Python311\python.exe" set PY="%ProgramFiles%\Python311\python.exe"
+if not defined PY where py >nul 2>&1 && py -3 -c "import sys;sys.exit(0 if sys.version_info>=(3,10) else 1)" >nul 2>&1 && set "PY=py -3"
+if not defined PY where python >nul 2>&1 && python -c "import sys;sys.exit(0 if sys.version_info>=(3,10) else 1)" >nul 2>&1 && set "PY=python"
+
+if defined PY goto :python_ok
+
+:cai_python_loi
+echo LOI: Khong the tu dong cai dat Python.
+echo      Vui long tai bo cai thu cong tai: https://www.python.org/downloads/windows/
+echo      Khi cai NHO TICH o Add python.exe to PATH, roi chay lai file nay.
+echo.
+if not defined NO_PAUSE pause
+exit /b 1
+
 :python_ok
 if defined PY (for /f "delims=" %%v in ('%PY% --version 2^>nul') do echo [1/6] %%v - OK) else (echo [1/6] Python trong .venv - OK)
 
